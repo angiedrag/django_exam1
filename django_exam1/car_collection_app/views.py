@@ -3,118 +3,120 @@ from django.shortcuts import render, redirect
 
 from django_exam1.car_collection_app import models
 from django_exam1.car_collection_app.models import Profile, Car
-from django_exam1.car_collection_app.forms import ProfileForm, CarForm
+from django_exam1.car_collection_app.forms import ProfileForm, CarForm, ProfileEditForm
 
 
-def index(request):
-    profile = models.Profile.objects.first()
+def home_page(request):
+    profile = Profile.objects.first()
     context = {'profile': profile}
-    return render(request, template_name="car_collection_app/index.html", context=context)
+
+    return render(request, template_name="index.html", context=context)
+
+def catalogue_page(request):
+    cars = Car.objects.all()
+    context = {'profile': Profile.objects.first(), 'cars': cars}
+
+    return render(request, template_name="catalogue.html", context=context)
 
 
-def car_create(request):
-    if request.method == 'POST':
-        form = forms.CarForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('dashboard-page')
-    else:
-        form = forms.CarForm
-    context = {'form': form}
-    return render(request, template_name="car_collection_app/create-car.html", context=context)
-
-
-def car_delete(request, car_id):
-    car = models.Car.objects.get(id=car_id)
-    if request.method == 'POST':
-        car.delete()
-        return redirect('catalogue')
-
-    form = forms.DeleteCarForm(instance=car)
-    context = {'form': form}
-    return render(request, template_name="car_collection_app/delete-car.html", context=context)
-
-
-def car_details(request, car_id):
-    car = models.Car.objects.get(id=car_id)
-    context = {'car': car}
-    return render(request, template_name="car_collection_app/car-details.html", context=context)
-
-
-def car_edit(request, car_id):
-    car = models.Car.objects.get(id=car_id)
-    if request.method == "GET":
-        context = {'form': forms.CarForm(initial=car.__dict__)}
-        return render(request, template_name=("car_collection_app/edit-car.html", context))
-    else:
-        form = forms.CarForm(request.POST, instance=car)
-        if form.is_valid():
-            form.save()
-            return redirect('catalogue')
-        else:
-            context = {'form': form}
-            return render(request, template_name=("car_collection_app/edit-car.html", context))
-
-
-
-def catalogue(request):
-    cars = models.Car.objects.all()
-    all_cars = 0
-    for car in cars:
-        all_cars += 1
-    context = {'cars': cars, 'all_cars': all_cars}
-
-    return render(request, template_name="car_collection_app/catalogue.html", context=context)
-
-
-def profile_create(request):
+def create_profile_page(request):
     if request.method == 'POST':
         form = forms.ProfileForm(request.POST)
+
         if form.is_valid():
             form.save()
             return redirect('catalogue')
     else:
         form = forms.ProfileForm()
+
     context = {'form': form}
-    return render(request, template_name="car_collection_app/create-profile.html", context=context)
+
+    return render(request, template_name="create-profile.html", context=context)
 
 
-def profile_delete(request):
-    profile = models.Profile.objects.first()
-    cars = models.Car.objects.all()
+def profile_details_page(request):
+    profile = Profile.objects.first()
+    all_cars = Car.objects.all()
+    total_sum = sum(car.price for car in all_cars)
+    context = {'profile': profile, 'total_sum': total_sum}
+
+    return render(request, template_name="profile-details.html", context=context)
+
+
+def edit_profile_page(request):
+    profile = Profile.objects.first()
+
+    if request.method == "GET":
+        context = {'form': ProfileEditForm(initial=profile.__dict__)}
+        return render(request, 'edit-profile.html', context)
+    else:
+        form = ProfileEditForm(request.POST, instance=profile)
+
+        if form.is_valid():
+            form.save()
+            return redirect('profile-details')
+        else:
+            context = {'profile': Profile.objects.first(), 'form': form}
+            return render(request, "edit-profile.html", context)
+
+
+def delete_profile_page(request):
+    profile = Profile.objects.first()
+    cars = Car.objects.all()
+
     if request.method == 'POST':
         profile.delete()
         cars.delete()
-        return redirect('index')
 
-    return render(request, template_name="car_collection_app/delete-profile.html")
+        return redirect('home')
 
-
-def profile_details(request):
-    profile = models.Profile.objects.first()
-    all_cars = models.Car.objects.all()
-    total_cars = len(all_cars)
-    try:
-        average_rating = sum(game.rating for game in all_cars) / total_cars
-    except ZeroDivisionError:
-        average_rating = 0
-    context = {'profile': profile, 'total_cars': total_cars, 'average_rating': average_rating}
-
-    return render(request, template_name="car_collection_app/profile-details.html", context=context)
+    return render(request, 'delete-profile.html', {"profile": Profile.objects.first()})
 
 
-def profile_edit(request):
-    profile = models.Profile.objects.first()
+def create_car_page(request):
+    form = CarForm(request.POST or None)
+
+    if form.is_valid():
+        form.save()
+
+        return redirect('catalogue')
+
+    context = {'profile': Profile.objects.first(), 'form': form}
+
+    return render(request, template_name="create-car.html", context=context)
+
+
+def car_details_page(request, pk):
+    car = Car.objects.get(id=pk)
+    context = {'profile': Profile.objects.first(), 'car': car}
+
+    return render(request, template_name="car-details.html", context=context)
+
+
+def edit_car_page(request, pk):
+    car = Car.objects.get(id=pk)
+
     if request.method == "GET":
-        context = {'form': forms.ProfileEditForm(initial=profile.__dict__)}
-        return render(request, 'car_collection_app/edit-profile.html', context)
+        context = {'profile': Profile.objects.first(), 'form': CarForm(initial=car.__dict__)}
+        return render(request, "edit-car.html", context)
     else:
-        form = forms.ProfileEditForm(request.POST, instance=profile)
+        form = CarForm(request.POST, instance=car)
+
         if form.is_valid():
             form.save()
-            return redirect('profile-details-page')
+            return redirect('catalogue')
         else:
-            context = {'form': form}
-            return render(request, template_name="car_collection_app/edit-profile.html", context=context)
+            context = {'profile': Profile.objects.first(), 'form': form}
+            return render(request, "edit-car.html", context)
 
-    return render(request, template_name="car_collection_app/edit-profile.html")
+
+def car_delete(request, pk):
+    car = models.Car.objects.get(id=pk)
+
+    if request.method == 'POST':
+        car.delete()
+        return redirect('catalogue')
+
+    form = forms.DeleteCarForm(instance=car)
+    context = {'profile': Profile.objects.first(), 'form': form}
+    return render(request, "delete-car.html", context=context)
