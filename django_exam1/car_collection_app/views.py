@@ -21,7 +21,7 @@ def car_create(request):
     else:
         form = forms.CarForm
     context = {'form': form}
-    return render(request, template_name="car_collection_app/car-create.html", context=context)
+    return render(request, template_name="car_collection_app/create-car.html", context=context)
 
 
 def car_delete(request, car_id):
@@ -32,7 +32,7 @@ def car_delete(request, car_id):
 
     form = forms.DeleteCarForm(instance=car)
     context = {'form': form}
-    return render(request, template_name="car_collection_app/car-delete.html", context=context)
+    return render(request, template_name="car_collection_app/delete-car.html", context=context)
 
 
 def car_details(request, car_id):
@@ -45,7 +45,7 @@ def car_edit(request, car_id):
     car = models.Car.objects.get(id=car_id)
     if request.method == "GET":
         context = {'form': forms.CarForm(initial=car.__dict__)}
-        return render(request, template_name=("car_collection_app/car-edit.html", context))
+        return render(request, template_name=("car_collection_app/edit-car.html", context))
     else:
         form = forms.CarForm(request.POST, instance=car)
         if form.is_valid():
@@ -53,7 +53,7 @@ def car_edit(request, car_id):
             return redirect('catalogue')
         else:
             context = {'form': form}
-            return render(request, template_name=("car_collection_app/car-edit.html", context))
+            return render(request, template_name=("car_collection_app/edit-car.html", context))
 
 
 
@@ -76,7 +76,7 @@ def profile_create(request):
     else:
         form = forms.ProfileForm()
     context = {'form': form}
-    return render(request, template_name="car_collection_app/profile-create.html", context=context)
+    return render(request, template_name="car_collection_app/create-profile.html", context=context)
 
 
 def profile_delete(request):
@@ -87,7 +87,7 @@ def profile_delete(request):
         cars.delete()
         return redirect('index')
 
-    return render(request, template_name="car_collection_app/profile-delete.html")
+    return render(request, template_name="car_collection_app/delete-profile.html")
 
 
 def profile_details(request):
@@ -107,7 +107,7 @@ def profile_edit(request):
     profile = models.Profile.objects.first()
     if request.method == "GET":
         context = {'form': forms.ProfileEditForm(initial=profile.__dict__)}
-        return render(request, 'car_collection_app/profile-edit.html', context)
+        return render(request, 'car_collection_app/edit-profile.html', context)
     else:
         form = forms.ProfileEditForm(request.POST, instance=profile)
         if form.is_valid():
@@ -115,6 +115,6 @@ def profile_edit(request):
             return redirect('profile-details-page')
         else:
             context = {'form': form}
-            return render(request, template_name="car_collection_app/profile-edit.html", context=context)
+            return render(request, template_name="car_collection_app/edit-profile.html", context=context)
 
-    return render(request, template_name="car_collection_app/profile-edit.html")
+    return render(request, template_name="car_collection_app/edit-profile.html")
