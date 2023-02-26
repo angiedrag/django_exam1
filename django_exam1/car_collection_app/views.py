@@ -110,7 +110,7 @@ def edit_car_page(request, pk):
             return render(request, "edit-car.html", context)
 
 
-def car_delete(request, pk):
+def delete_car_page(request, pk):
     car = models.Car.objects.get(id=pk)
 
     if request.method == 'POST':
